@@ -6,7 +6,7 @@ from bert_seq2seq import load_bert
 
 
 predicate2id, id2predicate = {}, {}
-with open('../state_dict/all_50_schemas') as f:
+with open('../state_dict/all_50_schemas', encoding="utf-8") as f:
     for l in f:
         l = json.loads(l)
         if l['predicate'] not in predicate2id:
