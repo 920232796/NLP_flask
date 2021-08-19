@@ -5,7 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
-
+state_dict.zip
+state_dict
 # Distribution / packaging
 .Python
 build/

@@ -1,0 +1,5 @@
+
+
+SERVER_PORT = 5555
+DEBUG = False
+SQLALCHEMY_ECHO = False
