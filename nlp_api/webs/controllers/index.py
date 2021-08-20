@@ -23,8 +23,8 @@ from application import cache
 router_index = Blueprint("index_page", __name__)
 
 
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu")
+device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cpu")
 classify_target = ["财经", "彩票", "房产", "股票", "家居", "教育", "科技", "社会", "时尚", "时政", "体育", "星座", "游戏", "娱乐"]
 ner_target = ["other", "address", "book", "company", "game", "government", "movie", "name", "organization", "position", "scene"]
 
@@ -41,6 +41,7 @@ ner_model_path = model_dir + "bert_ner_model_crf.bin"
 auto_title_model_path = model_dir + "nezha_auto_title.bin"
 gpt_article_model_path = model_dir + "gpt2_article_continued/pytorch_model.bin"
 auto_relation_extract_model_path = model_dir + "nezha_relation_extract.bin"
+
 ## 文本分类
 word2idx = load_chinese_base_vocab(vocab_path, simplfied=False)
 tokenizer = Tokenizer(word2idx)
