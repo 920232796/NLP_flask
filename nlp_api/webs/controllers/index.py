@@ -42,44 +42,63 @@ auto_title_model_path = model_dir + "nezha_auto_title.bin"
 gpt_article_model_path = model_dir + "gpt2_article_continued/pytorch_model.bin"
 auto_relation_extract_model_path = model_dir + "nezha_relation_extract.bin"
 
+def load_model(word2idx, model_path, model_name=None, model_class=None,
+               target_size=None, is_gpt=False, is_all_params=True, device=torch.device("cpu")):
+    if is_gpt:
+        model = load_gpt(word2idx)
+        model.eval()
+        model.set_device(device)
+        if is_all_params:
+            model.load_all_params(model_path, device=device)
+        else :
+            model.load_pretrain_params(model_path)
+        return model
+    if target_size is not None:
+        model = load_bert(word2idx, model_name=model_name, model_class=model_class, target_size=target_size)
+        model.set_device(device)
+        model.eval()
+        if is_all_params:
+            model.load_all_params(model_path, device=device)
+        else :
+            model.load_pretrain_params(model_path)
+    else :
+        model = load_bert(word2idx, model_name=model_name, model_class=model_class)
+        model.set_device(device)
+        model.eval()
+        if is_all_params:
+            model.load_all_params(model_path, device=device)
+        else :
+            model.load_pretrain_params(model_path)
+    return model
+
 ## 文本分类
 word2idx = load_chinese_base_vocab(vocab_path, simplfied=False)
 tokenizer = Tokenizer(word2idx)
-bert_classify = load_bert(word2idx, model_name=model_name, model_class="cls", target_size=len(classify_target))
-bert_classify.set_device(device)
-bert_classify.eval()
-bert_classify.load_all_params(model_path=cls_model_path, device=device)
+bert_classify = load_model(word2idx, model_path=cls_model_path,
+                           model_name=model_name, model_class="cls",
+                           target_size=len(classify_target), is_all_params=True, device=device)
 ## 对联
-bert_couplet = load_bert(word2idx, model_name=model_name, model_class="seq2seq")
-bert_couplet.set_device(device)
-bert_couplet.eval()
-bert_couplet.load_all_params(model_path=couplet_model_path, device=device)
+bert_couplet = load_model(word2idx, model_path=couplet_model_path,
+                           model_name=model_name, model_class="seq2seq",
+                        is_all_params=True, device=device)
 ## 小学数学题
-bert_math = load_bert(word2idx, model_name=model_name, model_class="seq2seq")
-bert_math.set_device(device)
-bert_math.eval()
-bert_math.load_all_params(model_path=math_model_path, device=device)
+bert_math = load_model(word2idx, model_path=math_model_path,
+                          model_name=model_name, model_class="seq2seq",
+                          is_all_params=True, device=device)
 ## ner
-bert_ner = load_bert(word2idx, model_name=model_name, model_class="sequence_labeling_crf", target_size=len(ner_target))
-bert_ner.set_device(device)
-bert_ner.eval()
-bert_ner.load_all_params(model_path=ner_model_path, device=device)
+bert_ner = load_model(word2idx, model_path=ner_model_path,
+                          model_name=model_name, model_class="sequence_labeling_crf",
+                          target_size=len(ner_target), is_all_params=True, device=device)
 ## auto title
-bert_auto_title = load_bert(word2idx, model_name=nezha_name, model_class="seq2seq")
-bert_auto_title.set_device(device)
-bert_auto_title.eval()
-bert_auto_title.load_all_params(model_path=auto_title_model_path, device=device)
+bert_auto_title = load_model(word2idx, model_path=auto_title_model_path,
+                       model_name=nezha_name, model_class="seq2seq",
+                       is_all_params=True, device=device)
 ## gpt2 article continued
-gpt_article = load_gpt(word2idx)
-gpt_article.eval()
-gpt_article.set_device(device)
-gpt_article.load_pretrain_params(gpt_article_model_path)
+gpt_article = load_model(word2idx, model_path=gpt_article_model_path ,is_gpt=True, device=device, is_all_params=False)
 ## auto_relation_extract
-auto_relation_extract_model = load_bert(word2idx, model_class="relation_extrac", model_name=nezha_name, target_size=len(predicate2id))
-auto_relation_extract_model.eval()
-auto_relation_extract_model.set_device(device)
-auto_relation_extract_model.load_all_params(auto_relation_extract_model_path, device=device)
-
+auto_relation_extract_model = load_model(word2idx, model_path=auto_relation_extract_model_path,
+                      model_name=nezha_name, model_class="relation_extrac",
+                      target_size=len(predicate2id), is_all_params=True, device=device)
 
 print("all models have beed loaded .")
 
