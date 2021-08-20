@@ -14,7 +14,7 @@ from test.relation_extract_test import relation_extract, predicate2id
 
 
 from bert_seq2seq import load_chinese_base_vocab, Tokenizer
-from bert_seq2seq import load_bert, load_gpt
+from webs.utils.utils import load_model
 from datetime import datetime
 import torch
 ## 引入缓存
@@ -42,34 +42,6 @@ auto_title_model_path = model_dir + "nezha_auto_title.bin"
 gpt_article_model_path = model_dir + "gpt2_article_continued/pytorch_model.bin"
 auto_relation_extract_model_path = model_dir + "nezha_relation_extract.bin"
 
-def load_model(word2idx, model_path, model_name=None, model_class=None,
-               target_size=None, is_gpt=False, is_all_params=True, device=torch.device("cpu")):
-    if is_gpt:
-        model = load_gpt(word2idx)
-        model.eval()
-        model.set_device(device)
-        if is_all_params:
-            model.load_all_params(model_path, device=device)
-        else :
-            model.load_pretrain_params(model_path)
-        return model
-    if target_size is not None:
-        model = load_bert(word2idx, model_name=model_name, model_class=model_class, target_size=target_size)
-        model.set_device(device)
-        model.eval()
-        if is_all_params:
-            model.load_all_params(model_path, device=device)
-        else :
-            model.load_pretrain_params(model_path)
-    else :
-        model = load_bert(word2idx, model_name=model_name, model_class=model_class)
-        model.set_device(device)
-        model.eval()
-        if is_all_params:
-            model.load_all_params(model_path, device=device)
-        else :
-            model.load_pretrain_params(model_path)
-    return model
 
 ## 文本分类
 word2idx = load_chinese_base_vocab(vocab_path, simplfied=False)
@@ -226,7 +198,7 @@ def auto_article():
         resp["ret"] = 0
         resp["msg"] = "请重新输入句子开头"
         return jsonify(resp)
-    res = get_article(gpt_article, text, out_max_length=300)
+    res = get_article(gpt_article, text, out_max_length=100, top_k=10)
     resp["data"] = res
 
     print(f"输出结果: { resp['data']}")
