@@ -12,16 +12,18 @@ from test.ner_test import ner_print
 from test.gpt_article_continued import get_article
 from test.relation_extract_test import relation_extract, predicate2id
 
-
 from bert_seq2seq import load_chinese_base_vocab, Tokenizer
-from webs.utils.utils import load_model
+from webs.utils.utils import load_model, RedisCache
 from datetime import datetime
 import torch
 ## 引入缓存
 from application import cache
+import redis
 
 router_index = Blueprint("index_page", __name__)
 
+
+r = RedisCache(host="localhost", port=6379, decode_responses=True)
 
 # device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
 device = torch.device("cpu")
@@ -83,6 +85,7 @@ def index():
 @router_index.before_request
 def before_user():
     global flag
+    resp = {"code": 200, "msg": "success", "data": [], "ret": 1}
     ## 在这里做一下缓存功能
     num = cache.get("number")
     if num is not None and num > 4:
@@ -91,6 +94,7 @@ def before_user():
         num = 0
     num = num + 1
     cache.set("number", num, timeout=3)
+
     return None
 
 @router_index.route("/auto_fenci", methods=["GET", "POST"])
@@ -118,7 +122,15 @@ def text_classify():
         resp["ret"] = 0
         resp["msg"] = "请重新输入句子"
         return jsonify(resp)
-    res = text_classification(bert_classify, text, tokenizer, device=device)
+
+    cache_res = r.get_cache(text, prefix="classify")
+    if cache_res == "":
+        # 没有缓存
+        res = text_classification(bert_classify, text, tokenizer, device=device)
+        r.set_cache(text, prefix="classify", res=res)
+        # print(r.keys())
+    else :
+        res = cache_res
     print(f"输出结果: {res}")
     resp["data"] = res
 
@@ -133,7 +145,16 @@ def auto_title():
         resp["ret"] = 0
         resp["msg"] = "请重新输入句子"
         return jsonify(resp)
-    res = title(bert_auto_title, text)
+
+    cache_res = r.get_cache(text, prefix="auto_title")
+    if cache_res == "":
+        # 没有缓存
+        res = title(bert_auto_title, text)
+        r.set_cache(text, prefix="auto_title", res=res)
+        # print(r.keys())
+    else :
+        res = cache_res
+
     print(f"输出结果: {res}")
     resp["data"] = res
 
@@ -148,7 +169,16 @@ def auto_couplet():
         resp["ret"] = 0
         resp["msg"] = "请重新输入句子"
         return jsonify(resp)
-    res = poem(bert_couplet, text)
+
+    cache_res = r.get_cache(text, prefix="auto_couplet")
+    if cache_res == "":
+        # 没有缓存
+        res = poem(bert_couplet, text)
+        r.set_cache(text, prefix="auto_couplet", res=res)
+        # print(r.keys())
+    else :
+        res = cache_res
+
     print(f"输出结果: {res}")
     resp["data"] = res
     return jsonify(resp)
@@ -162,7 +192,16 @@ def auto_math():
         resp["ret"] = 0
         resp["msg"] = "请重新输入句子"
         return jsonify(resp)
-    res = math_ques(bert_math, text)
+
+    cache_res = r.get_cache(text, prefix="auto_math")
+    if cache_res == "":
+        # 没有缓存
+        res = math_ques(bert_math, text)
+        r.set_cache(text, prefix="auto_math", res=res)
+        # print(r.keys())
+    else :
+        res = cache_res
+
     try:
         res_res = eval(res)
         resp["data"] = res + " = " + str(res_res)
@@ -183,7 +222,16 @@ def auto_ner():
         resp["ret"] = 0
         resp["msg"] = "请重新输入句子"
         return jsonify(resp)
-    res = ner_print(bert_ner, text, word2idx, tokenizer, ner_target, device=device)
+
+    cache_res = r.get_cache(text, prefix="auto_ner")
+    if cache_res == "":
+        # 没有缓存
+        res = ner_print(bert_ner, text, word2idx, tokenizer, ner_target, device=device)
+        r.set_cache(text, prefix="auto_ner", res=res)
+        # print(r.keys())
+    else :
+        res = cache_res
+
     resp["data"] = res
 
     print(f"输出结果: { resp['data']}")
@@ -198,7 +246,16 @@ def auto_article():
         resp["ret"] = 0
         resp["msg"] = "请重新输入句子开头"
         return jsonify(resp)
-    res = get_article(gpt_article, text, out_max_length=100, top_k=10)
+
+    cache_res = r.get_cache(text, prefix="auto_article")
+    if cache_res == "":
+        # 没有缓存
+        res = get_article(gpt_article, text, out_max_length=100, top_k=10)
+        r.set_cache(text, prefix="auto_article", res=res)
+        # print(r.keys())
+    else :
+        res = cache_res
+
     resp["data"] = res
 
     print(f"输出结果: { resp['data']}")
@@ -213,7 +270,16 @@ def auto_relation_extract():
         resp["ret"] = 0
         resp["msg"] = "请重新输入"
         return jsonify(resp)
-    res = relation_extract(auto_relation_extract_model, text, word2idx, tokenizer, device=device)
+
+    cache_res = r.get_cache(text, prefix="auto_relation_extract")
+    if cache_res == "":
+        # 没有缓存
+        res = relation_extract(auto_relation_extract_model, text, word2idx, tokenizer, device=device)
+        r.set_cache(text, prefix="auto_relation_extract", res=res)
+        # print(r.keys())
+    else :
+        res = cache_res
+
     resp["data"] = res
 
     print(f"输出结果: { resp['data']}")
