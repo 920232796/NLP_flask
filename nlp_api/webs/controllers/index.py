@@ -247,14 +247,7 @@ def auto_article():
         resp["msg"] = "请重新输入句子开头"
         return jsonify(resp)
 
-    cache_res = r.get_cache(text, prefix="auto_article")
-    if cache_res == "":
-        # 没有缓存
-        res = get_article(gpt_article, text, out_max_length=100, top_k=10)
-        r.set_cache(text, prefix="auto_article", res=res)
-        # print(r.keys())
-    else :
-        res = cache_res
+    res = get_article(gpt_article, text, out_max_length=100, top_k=10)
 
     resp["data"] = res
 
